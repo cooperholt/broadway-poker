@@ -151,84 +151,100 @@ export function optimizeStack(
   const sorted = sortByValue(filled);
   const n = sorted.length;
 
-  // Skip biggest chips that exceed buy-in (can't even fit one)
+  // Skip chips whose value exceeds buy-in — can't fit even one.
   const usable = sorted.filter((c) => (c.value ?? 0) <= buyIn);
   const usableN = usable.length;
   if (usableN === 0) return null;
 
   const shares = valueSharesFor(usableN);
 
-  // Per-player availability caps
   const perPlayerCap = (c: ChipRow) =>
     c.count_available == null
       ? Number.POSITIVE_INFINITY
       : Math.floor(c.count_available / numPlayers);
 
-  // Walk from LARGEST to second-smallest; smallest absorbs the residual.
+  const sortedIdxOf = (color: string) =>
+    sorted.findIndex((s) => s.color === color);
+
+  // Pass 1: seed counts using each chip's value share, capped by availability.
+  // No "remaining value" cap here — we'll reconcile in pass 2.
   const counts = new Array(n).fill(0) as number[];
-  let remainingValue = round2(buyIn);
-  for (let idx = usableN - 1; idx >= 1; idx--) {
-    const c = usable[idx];
+  for (let i = 0; i < usableN; i++) {
+    const c = usable[i];
     const v = c.value!;
-    const targetValue = buyIn * shares[idx];
+    const targetValue = buyIn * shares[i];
     let target = Math.round(targetValue / v);
-    // Cap by availability
     target = Math.min(target, perPlayerCap(c));
-    // Cap by remaining value (avoid overshoot)
-    const maxFit = Math.floor(remainingValue / v);
-    target = Math.min(target, maxFit);
     if (target < 0) target = 0;
-    // Map back to sorted index
-    const sortedIdx = sorted.findIndex((s) => s.color === c.color);
-    counts[sortedIdx] = target;
-    remainingValue = round2(remainingValue - target * v);
+    counts[sortedIdxOf(c.color)] = target;
   }
 
-  // Smallest absorbs the rest
-  const smallest = usable[0];
-  const v0 = smallest.value!;
-  const sortedSmallestIdx = sorted.findIndex((s) => s.color === smallest.color);
-  let lowCount = round2(remainingValue / v0);
-  if (!Number.isInteger(lowCount)) return null;
-  if (lowCount < 0) return null;
-
-  // If the smallest count would exceed availability, trade groups of smallest
-  // chips up for one of the next-larger denomination, until smallest fits in
-  // its per-player cap. Greedy: prefer the smallest larger chip with room.
-  const cap0 = perPlayerCap(smallest);
-  while (lowCount > cap0) {
-    let traded = false;
-    for (let idx = 1; idx < usableN; idx++) {
-      const chip = usable[idx];
-      const v = chip.value!;
-      const sortedIdx = sorted.findIndex((s) => s.color === chip.color);
-      const ratio = v / v0;
-      if (!Number.isInteger(round2(ratio))) continue;
-      if (counts[sortedIdx] >= perPlayerCap(chip)) continue;
-      if (lowCount < ratio) continue;
-      // Trade `ratio` smallest chips for 1 chip of the larger color.
-      counts[sortedIdx] += 1;
-      lowCount -= Math.round(ratio);
-      traded = true;
-      break;
+  // Pass 2: compute current stack value and a residual to reconcile.
+  function currentSum(): number {
+    let s = 0;
+    for (let i = 0; i < usableN; i++) {
+      const c = usable[i];
+      s += counts[sortedIdxOf(c.color)] * c.value!;
     }
-    if (!traded) {
-      // Truly infeasible within the available chip counts.
-      return null;
+    return round2(s);
+  }
+  let residual = round2(buyIn - currentSum());
+
+  // Over-allocated: walk from largest down, removing chips until sum ≤ buy-in.
+  if (residual < 0) {
+    for (let idx = usableN - 1; idx >= 0 && residual < 0; idx--) {
+      const c = usable[idx];
+      const v = c.value!;
+      const si = sortedIdxOf(c.color);
+      while (counts[si] > 0 && residual < 0) {
+        counts[si] -= 1;
+        residual = round2(residual + v);
+      }
     }
   }
 
-  if (lowCount < 0) return null;
-  counts[sortedSmallestIdx] = lowCount;
+  // Under-allocated: distribute the residual to chips with cap room, largest
+  // first (so big residuals get absorbed by big chips, not 1000 white chips).
+  if (residual > 0) {
+    for (let idx = usableN - 1; idx >= 0 && residual > 0; idx--) {
+      const c = usable[idx];
+      const v = c.value!;
+      const si = sortedIdxOf(c.color);
+      const cap = perPlayerCap(c);
+      while (counts[si] < cap && residual >= v) {
+        counts[si] += 1;
+        residual = round2(residual - v);
+      }
+    }
+  }
 
-  // Map back to original chip order, preserving any chips that exceeded
-  // buy-in (they get count=0 but stay in the row list).
+  // Anything left in residual means we couldn't fit it within caps using
+  // chips ≥ smallest. Try one final push into the smallest. If that still
+  // exceeds smallest's cap, the buy-in is infeasible.
+  if (residual > 0) {
+    const smallest = usable[0];
+    const v0 = smallest.value!;
+    const si = sortedIdxOf(smallest.color);
+    const additional = round2(residual / v0);
+    if (!Number.isInteger(additional)) return null;
+    counts[si] += additional;
+    residual = 0;
+    if (counts[si] > perPlayerCap(smallest)) return null;
+  }
+  if (residual < 0) return null;
+
+  // Defense in depth: verify nothing exceeds its cap.
+  for (let i = 0; i < usableN; i++) {
+    const c = usable[i];
+    if (counts[sortedIdxOf(c.color)] > perPlayerCap(c)) return null;
+  }
+
+  // Map back to original chip order; chips that exceed buy-in get count=0.
   const out: ChipRow[] = chipsIn.map((c) => {
-    const sortedIdx = sorted.findIndex((s) => s.color === c.color);
     return {
       ...c,
       value: filled.find((f) => f.color === c.color)!.value,
-      count_per_player: counts[sortedIdx],
+      count_per_player: counts[sortedIdxOf(c.color)],
     };
   });
   return out;
