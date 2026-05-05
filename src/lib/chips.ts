@@ -188,12 +188,37 @@ export function optimizeStack(
   const smallest = usable[0];
   const v0 = smallest.value!;
   const sortedSmallestIdx = sorted.findIndex((s) => s.color === smallest.color);
-  const lowCount = round2(remainingValue / v0);
+  let lowCount = round2(remainingValue / v0);
   if (!Number.isInteger(lowCount)) return null;
   if (lowCount < 0) return null;
-  // Note: we do NOT cap by perPlayerCap here. If the result exceeds available
-  // chips, the UI surfaces a "not enough chips" warning so the user can decide
-  // to add more chips or change the buy-in. Forcing null hides the result.
+
+  // If the smallest count would exceed availability, trade groups of smallest
+  // chips up for one of the next-larger denomination, until smallest fits in
+  // its per-player cap. Greedy: prefer the smallest larger chip with room.
+  const cap0 = perPlayerCap(smallest);
+  while (lowCount > cap0) {
+    let traded = false;
+    for (let idx = 1; idx < usableN; idx++) {
+      const chip = usable[idx];
+      const v = chip.value!;
+      const sortedIdx = sorted.findIndex((s) => s.color === chip.color);
+      const ratio = v / v0;
+      if (!Number.isInteger(round2(ratio))) continue;
+      if (counts[sortedIdx] >= perPlayerCap(chip)) continue;
+      if (lowCount < ratio) continue;
+      // Trade `ratio` smallest chips for 1 chip of the larger color.
+      counts[sortedIdx] += 1;
+      lowCount -= Math.round(ratio);
+      traded = true;
+      break;
+    }
+    if (!traded) {
+      // Truly infeasible within the available chip counts.
+      return null;
+    }
+  }
+
+  if (lowCount < 0) return null;
   counts[sortedSmallestIdx] = lowCount;
 
   // Map back to original chip order, preserving any chips that exceeded
