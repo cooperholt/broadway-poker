@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ChipCalculator, { Preset as CalcPreset } from "@/components/ChipCalculator";
 import PlayerNameInput from "@/components/PlayerNameInput";
+import AllenGif from "@/components/AllenGif";
 import { ChipConfig } from "@/lib/chips";
 import {
   GameState,
@@ -139,14 +140,17 @@ export default function SetupView({
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          New Game
-        </h1>
-        <p className="text-sm text-muted mt-1 max-w-md">
-          Set up a new game. Stays on this device — refresh-safe. Discard any
-          time.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            New Game
+          </h1>
+          <p className="text-sm text-muted mt-1 max-w-md">
+            Set up a new game. Stays on this device — refresh-safe. Discard any
+            time.
+          </p>
+        </div>
+        <AllenGif />
       </header>
 
       <div className="surface p-4 sm:p-5">
