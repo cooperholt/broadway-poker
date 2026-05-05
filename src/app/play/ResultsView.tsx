@@ -23,12 +23,12 @@ export default function ResultsView({
   game,
   onChange,
   onReturnToLive,
-  onStartNew,
+  onConfirm,
 }: {
   game: GameState;
   onChange: (g: GameState) => void;
   onReturnToLive: () => void;
-  onStartNew: () => void;
+  onConfirm: () => void;
 }) {
   const chipSet =
     game.chip_config && game.use_chip_calc
@@ -127,6 +127,8 @@ export default function ResultsView({
       if (Date.now() < end) requestAnimationFrame(burst);
     }
     burst();
+    // Transition to settle-up after a beat so the confetti is visible.
+    setTimeout(() => onConfirm(), 350);
   }
 
   return (
@@ -286,16 +288,10 @@ export default function ResultsView({
           <button
             type="button"
             onClick={fireConfetti}
-            className="px-4 py-2 rounded-md bg-poker text-white hover:bg-poker-hover font-semibold text-sm"
+            disabled={confirmedSummary}
+            className="px-5 py-2.5 rounded-md bg-poker text-white hover:bg-poker-hover font-bold text-base disabled:opacity-60"
           >
             🎉 Confirm results
-          </button>
-          <button
-            type="button"
-            onClick={onStartNew}
-            className="px-4 py-2 rounded-md border border-poker text-poker hover:bg-poker hover:text-white font-semibold text-sm"
-          >
-            Start new game
           </button>
         </div>
       </div>

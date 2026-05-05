@@ -120,7 +120,7 @@ export type GameState = {
   id: string;
   played_on: string; // ISO date
   notes: string | null;
-  status: "in_progress" | "complete";
+  status: "in_progress" | "complete" | "settled";
   use_chip_calc: boolean;
   chip_config: ChipConfig | null;
   players: GamePlayer[];

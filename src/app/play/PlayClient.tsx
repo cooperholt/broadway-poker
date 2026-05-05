@@ -10,6 +10,7 @@ import {
 import SetupView from "./SetupView";
 import LiveView from "./LiveView";
 import ResultsView from "./ResultsView";
+import PayoutView from "./PayoutView";
 
 export default function PlayClient() {
   const [game, setGame] = useState<GameState | null>(null);
@@ -20,7 +21,6 @@ export default function PlayClient() {
     setHydrated(true);
   }, []);
 
-  // Persist any change to localStorage immediately.
   useEffect(() => {
     if (!hydrated) return;
     saveCurrentGame(game);
@@ -53,7 +53,13 @@ export default function PlayClient() {
         onChange={setGame}
         onEnd={() =>
           setGame((g) =>
-            g ? { ...g, status: "complete", completed_at: new Date().toISOString() } : g
+            g
+              ? {
+                  ...g,
+                  status: "complete",
+                  completed_at: new Date().toISOString(),
+                }
+              : g
           )
         }
         onAbandon={() => setGame(null)}
@@ -61,14 +67,33 @@ export default function PlayClient() {
     );
   }
 
+  if (game.status === "complete") {
+    return (
+      <ResultsView
+        game={game}
+        onChange={setGame}
+        onReturnToLive={() =>
+          setGame((g) =>
+            g
+              ? { ...g, status: "in_progress", completed_at: undefined }
+              : g
+          )
+        }
+        onConfirm={() =>
+          setGame((g) => (g ? { ...g, status: "settled" } : g))
+        }
+      />
+    );
+  }
+
+  // status === "settled" — show payout
   return (
-    <ResultsView
+    <PayoutView
       game={game}
-      onChange={setGame}
-      onReturnToLive={() =>
-        setGame((g) => (g ? { ...g, status: "in_progress", completed_at: undefined } : g))
-      }
       onStartNew={() => setGame(null)}
+      onBackToResults={() =>
+        setGame((g) => (g ? { ...g, status: "complete" } : g))
+      }
     />
   );
 }
