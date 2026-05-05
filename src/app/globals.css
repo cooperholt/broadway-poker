@@ -1,26 +1,148 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* Surfaces */
+  --color-background: #eef0f1;
+  --color-surface: #ffffff;
+  --color-header: #e3e6e8;
+  --color-foreground: #0d1410;
+  --color-muted: #5a6068;
+  --color-border: oklch(0 0 0 / 0.10);
+  --color-border-strong: oklch(0 0 0 / 0.18);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  /* Brand */
+  --color-poker: #0a3d2c;
+  --color-poker-hover: #0c4f37;
+  --color-poker-soft: #d8e7df;
+  --color-poker-faint: #ecf3ef;
+
+  /* Semantic */
+  --color-positive: #0a3d2c;
+  --color-negative: #b3261e;
+  --color-warning: #a8650b;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* Subtle felt texture: layered radial gradients give an organic
+     non-flat surface without the noise-png approach. */
+  background-image:
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(10, 61, 44, 0.05) 0,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 88% 82%,
+      rgba(10, 61, 44, 0.04) 0,
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 0, 0, 0.02) 0,
+      transparent 60%
+    );
+  background-attachment: fixed;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Subtle bottom shadow under the header */
+.header-shadow {
+  box-shadow:
+    0 1px 0 var(--color-border-strong),
+    0 4px 12px -8px rgba(0, 0, 0, 0.18);
+}
+
+/* Card surface with felt-edge shadow */
+.surface {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(13, 20, 16, 0.04),
+    0 4px 16px -8px rgba(13, 20, 16, 0.06);
+}
+
+/* Live-game pulse — used in nav when an in-progress session exists */
+@keyframes live-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  60% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+.live-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c8243a;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #c8243a;
+  animation: live-pulse 1.6s ease-out infinite;
+}
+
+/* Subtle press feedback on buttons (excluding form controls) */
+button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Hover micro-lift on .surface cards within the sessions list */
+.session-card {
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+.session-card:hover {
+  box-shadow:
+    0 1px 2px rgba(13, 20, 16, 0.06),
+    0 8px 24px -10px rgba(10, 61, 44, 0.18);
+  transform: translateY(-1px);
+}
+
+/* Suit divider — small ♠♥♦♣ inline accent */
+.suit-divider {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  color: var(--color-muted);
+  font-size: 0.7em;
+  letter-spacing: 0.3em;
+  user-select: none;
+}
+
+/* Confetti container */
+.confetti-host {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* iOS Safari auto-zooms in on input focus when font-size is below 16px and
+   doesn't zoom back out when navigating away. Force 16px on mobile so it
+   never triggers. Above sm we keep the smaller text-sm (14px) styling. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

@@ -1,65 +1,95 @@
-import Image from "next/image";
+import Link from "next/link";
+import ChipDot from "@/components/ChipDot";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-10">
+      <section className="text-center pt-4 sm:pt-10 pb-2">
+        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
+          Broadway Poker
+        </h1>
+        <p className="text-base sm:text-lg text-muted mt-3 max-w-xl mx-auto">
+          A free chip calculator and home-game tracker. Optimize your stack,
+          run a live game from your phone, and never argue about who owes
+          who again.
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <Link
+            href="/calculator"
+            className="px-5 py-3 rounded-md bg-poker text-white hover:bg-poker-hover font-semibold text-base"
+          >
+            Open chip calculator →
+          </Link>
+          <Link
+            href="/play"
+            className="px-5 py-3 rounded-md border border-poker text-poker hover:bg-poker hover:text-white font-semibold text-base"
+          >
+            Track a game
+          </Link>
+        </div>
+        <div className="suit-divider mt-8 justify-center flex">
+          <span>♠ ♥ ♦ ♣</span>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Feature
+          title="Chip distribution"
+          chip="white"
+          body="Tell it your buy-in, players, and what chips you have. We'll suggest a balanced stack you can adjust by hand."
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        <Feature
+          title="Live game tracking"
+          chip="red"
+          body="Start a game, add players as they walk in, log rebuys and busts. Refresh-proof — your data lives in your browser."
+        />
+        <Feature
+          title="Reusable presets"
+          chip="green"
+          body="Save the chip set you actually use, with the blinds you actually play. Pull it back up next week in two clicks."
+        />
+      </section>
+
+      <section className="surface p-5 sm:p-7">
+        <h2 className="text-lg font-bold tracking-tight mb-2">
+          What this is, what it isn&apos;t
+        </h2>
+        <ul className="text-sm text-muted space-y-1.5 list-disc pl-5">
+          <li>
+            Free, no account required — your games and presets are stored on
+            your device.
+          </li>
+          <li>
+            Best on the device you&apos;re running the game on (phone or
+            laptop). Refresh-resilient.
+          </li>
+          <li>
+            Not a long-term leaderboard. If you want to track wins/losses
+            across many sessions with your friends, that&apos;s a separate
+            tool we&apos;re working on.
+          </li>
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+function Feature({
+  title,
+  body,
+  chip,
+}: {
+  title: string;
+  body: string;
+  chip: string;
+}) {
+  return (
+    <div className="surface p-4 sm:p-5">
+      <div className="mb-2.5">
+        <ChipDot colorId={chip} size={24} />
+      </div>
+      <h3 className="font-bold text-base mb-1">{title}</h3>
+      <p className="text-sm text-muted leading-relaxed">{body}</p>
     </div>
   );
 }
