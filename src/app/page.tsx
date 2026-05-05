@@ -15,16 +15,16 @@ export default function Home() {
         </p>
         <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link
-            href="/calculator"
+            href="/play"
             className="px-5 py-3 rounded-md bg-poker text-white hover:bg-poker-hover font-semibold text-base"
           >
-            Open chip calculator →
+            Start a game →
           </Link>
           <Link
-            href="/play"
+            href="/calculator"
             className="px-5 py-3 rounded-md border border-poker text-poker hover:bg-poker hover:text-white font-semibold text-base"
           >
-            Start a game
+            Open chip calculator
           </Link>
         </div>
         <div className="suit-divider mt-8 justify-center flex">
