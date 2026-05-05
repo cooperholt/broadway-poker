@@ -7,7 +7,6 @@ import PokerLogo from "./PokerLogo";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/calculator", label: "Chip Calculator" },
-  { href: "/play", label: "Start a Game" },
 ];
 
 export default function NavBar() {
@@ -30,6 +29,13 @@ export default function NavBar() {
             <span className="hidden sm:inline">Broadway Poker</span>
           </span>
         </Link>
+        {/* Mobile-only Start a Game CTA next to logo */}
+        <Link
+          href="/play"
+          className="sm:hidden px-3 py-1.5 rounded-md bg-poker text-white text-sm font-semibold"
+        >
+          Start a Game →
+        </Link>
       </div>
       <div className="flex items-center gap-0.5 sm:gap-2 text-sm overflow-x-auto sm:overflow-visible">
         {navLinks.map((l) => {
@@ -49,6 +55,14 @@ export default function NavBar() {
             </Link>
           );
         })}
+        {/* Desktop Start a Game CTA on the right */}
+        <Link
+          href="/play"
+          aria-current={isActive("/play") ? "page" : undefined}
+          className="hidden sm:inline-block ml-1 px-3 py-1.5 rounded-md bg-poker text-white hover:bg-poker-hover font-semibold whitespace-nowrap"
+        >
+          Start a Game →
+        </Link>
       </div>
     </nav>
   );
