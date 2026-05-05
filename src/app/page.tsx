@@ -24,7 +24,7 @@ export default function Home() {
             href="/play"
             className="px-5 py-3 rounded-md border border-poker text-poker hover:bg-poker hover:text-white font-semibold text-base"
           >
-            Track a game
+            Start a game
           </Link>
         </div>
         <div className="suit-divider mt-8 justify-center flex">
