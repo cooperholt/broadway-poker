@@ -164,18 +164,18 @@ export default function ResultsView({
         )}
       </div>
 
-      <div className="surface">
-        <div className="px-3 sm:px-5 py-3 border-b border-border">
-          <h2 className="font-bold">Final stacks</h2>
-        </div>
-        <ul className="divide-y divide-border">
+      <div>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted px-1 mb-3">
+          Final stacks
+        </h2>
+        <ul className="space-y-3">
           {game.players.map((p) => {
             const r = rows[p.id];
             const final = finalValueFor(p);
             const buyIn = totalBuyIn(p);
             const net = final - buyIn;
             return (
-              <li key={p.id} className="px-3 sm:px-5 py-4">
+              <li key={p.id} className="surface p-4 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-2">
                   <div className="flex items-center gap-2">
                     <span
