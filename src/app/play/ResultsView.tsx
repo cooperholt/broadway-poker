@@ -344,6 +344,20 @@ function ChipCountInput({
   chipValue: number;
   onChange: (n: number) => void;
 }) {
+  const [draft, setDraft] = useState(value === 0 ? "" : String(value));
+  useEffect(() => {
+    setDraft(value === 0 ? "" : String(value));
+  }, [value]);
+
+  function commit() {
+    if (draft === "") {
+      onChange(0);
+      return;
+    }
+    const n = parseInt(draft, 10);
+    onChange(Number.isFinite(n) && n >= 0 ? n : 0);
+  }
+
   return (
     <div className="flex items-center gap-2 border border-border rounded-md p-2">
       <ChipDot colorId={colorId} size={20} />
@@ -351,12 +365,21 @@ function ChipCountInput({
         ${chipValue.toFixed(2)}
       </span>
       <input
-        type="number"
-        min={0}
-        step={1}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="ml-auto w-14 tabular-nums text-right border-b border-dashed border-border bg-transparent text-sm focus:outline-none focus:border-poker"
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        placeholder="0"
+        onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
+        onBlur={commit}
+        onFocus={(e) => e.currentTarget.select()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+        className="ml-auto w-14 tabular-nums text-right border-b border-dashed border-border bg-transparent text-sm focus:outline-none focus:border-poker placeholder:text-foreground/60"
       />
     </div>
   );
