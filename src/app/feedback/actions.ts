@@ -11,7 +11,7 @@ function checkAdmin(password: string): boolean {
 
 export type FeedbackType = "bug" | "recommendation" | "praise" | "other";
 
-const DAILY_FEEDBACK_LIMIT = 10;
+const DAILY_FEEDBACK_LIMIT = 50;
 
 export async function submitFeedback(input: {
   message: string;
