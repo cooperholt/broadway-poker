@@ -2,14 +2,22 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { submitFeedback } from "./actions";
+import { submitFeedback, FeedbackType } from "./actions";
 
 const inputCls =
   "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-poker/40 focus:border-poker";
 
+const TYPE_OPTIONS: { value: FeedbackType; label: string; emoji: string }[] = [
+  { value: "bug", label: "Bug", emoji: "🐛" },
+  { value: "recommendation", label: "Recommendation", emoji: "💡" },
+  { value: "praise", label: "Praise", emoji: "🎉" },
+  { value: "other", label: "Other", emoji: "💬" },
+];
+
 export default function FeedbackForm() {
   const [message, setMessage] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [feedbackType, setFeedbackType] = useState<FeedbackType | "">("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -23,7 +31,8 @@ export default function FeedbackForm() {
     startTransition(async () => {
       const res = await submitFeedback({
         message,
-        email: email.trim() || null,
+        name: name.trim() || null,
+        feedback_type: feedbackType || null,
         page: typeof window !== "undefined" ? document.referrer || null : null,
         user_agent:
           typeof window !== "undefined" ? window.navigator.userAgent : null,
@@ -33,7 +42,8 @@ export default function FeedbackForm() {
         return;
       }
       setMessage("");
-      setEmail("");
+      setName("");
+      setFeedbackType("");
       setDone(true);
     });
   }
@@ -44,7 +54,7 @@ export default function FeedbackForm() {
         <div className="text-4xl">🎉</div>
         <h2 className="text-xl font-bold">Thanks for the feedback!</h2>
         <p className="text-sm text-muted max-w-sm mx-auto">
-          Your message landed safely. I read every one personally.
+          Your message is now visible below. Scroll down to see it.
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
           <button
@@ -68,6 +78,45 @@ export default function FeedbackForm() {
   return (
     <div className="space-y-4">
       <div className="surface p-4 sm:p-5 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label className="block">
+            <span className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+              Name{" "}
+              <span className="font-normal normal-case text-muted/70">
+                (optional)
+              </span>
+            </span>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Anonymous"
+              maxLength={80}
+              className={inputCls}
+              autoComplete="off"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+              Type
+            </span>
+            <select
+              value={feedbackType}
+              onChange={(e) =>
+                setFeedbackType(e.target.value as FeedbackType | "")
+              }
+              className={inputCls}
+            >
+              <option value="">— pick one —</option>
+              {TYPE_OPTIONS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.emoji} {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <label className="block">
           <span className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
             What&apos;s on your mind?
@@ -83,20 +132,6 @@ export default function FeedbackForm() {
           <div className="mt-1 text-xs text-muted text-right tabular-nums">
             {message.length} / 4000
           </div>
-        </label>
-
-        <label className="block">
-          <span className="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
-            Email <span className="font-normal normal-case text-muted/70">(optional — only if you want a reply)</span>
-          </span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className={inputCls}
-            autoComplete="email"
-          />
         </label>
       </div>
 

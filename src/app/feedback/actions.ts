@@ -3,13 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { supabase } from "@/lib/supabase";
 
+const ADMIN_PASSWORD = "Blackjack1!";
+
 function checkAdmin(password: string): boolean {
-  return password === (process.env.ADMIN_PASSWORD ?? "AV");
+  return password === ADMIN_PASSWORD;
 }
+
+export type FeedbackType = "bug" | "recommendation" | "praise" | "other";
 
 export async function submitFeedback(input: {
   message: string;
-  email: string | null;
+  name: string | null;
+  feedback_type: FeedbackType | null;
   page: string | null;
   user_agent: string | null;
 }): Promise<{ error?: string }> {
@@ -25,7 +30,8 @@ export async function submitFeedback(input: {
   const sb = supabase();
   const { error } = await sb.from("feedback").insert({
     message,
-    email: input.email?.trim() || null,
+    name: input.name?.trim() || null,
+    feedback_type: input.feedback_type ?? null,
     page: input.page?.slice(0, 200) ?? null,
     user_agent: input.user_agent?.slice(0, 500) ?? null,
   });
@@ -56,26 +62,6 @@ export async function markAddressed(
   return {};
 }
 
-export async function respondToFeedback(
-  id: string,
-  response: string,
-  password: string
-): Promise<{ error?: string }> {
-  if (!checkAdmin(password)) return { error: "Wrong password." };
-  const trimmed = response.trim();
-  const sb = supabase();
-  const { error } = await sb
-    .from("feedback")
-    .update({
-      admin_response: trimmed || null,
-      responded_at: trimmed ? new Date().toISOString() : null,
-    })
-    .eq("id", id);
-  if (error) return { error: error.message };
-  revalidatePath("/feedback");
-  return {};
-}
-
 export async function deleteFeedback(
   id: string,
   password: string
@@ -84,6 +70,49 @@ export async function deleteFeedback(
   const sb = supabase();
   const { error } = await sb
     .from("feedback")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/feedback");
+  return {};
+}
+
+// Any visitor can post a response. If they pass the admin password, the
+// response is flagged as an admin reply (visible badge).
+export async function submitResponse(input: {
+  feedback_id: string;
+  name: string | null;
+  message: string;
+  admin_password: string | null;
+}): Promise<{ error?: string }> {
+  const message = input.message.trim();
+  if (!message) return { error: "Please write something." };
+  if (message.length > 2000) {
+    return { error: "Response is too long (max 2000 characters)." };
+  }
+  const isAdmin = input.admin_password
+    ? checkAdmin(input.admin_password)
+    : false;
+  const sb = supabase();
+  const { error } = await sb.from("feedback_responses").insert({
+    feedback_id: input.feedback_id,
+    name: input.name?.trim() || null,
+    message,
+    is_admin: isAdmin,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/feedback");
+  return {};
+}
+
+export async function deleteResponse(
+  id: string,
+  password: string
+): Promise<{ error?: string }> {
+  if (!checkAdmin(password)) return { error: "Wrong password." };
+  const sb = supabase();
+  const { error } = await sb
+    .from("feedback_responses")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return { error: error.message };
