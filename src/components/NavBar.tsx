@@ -7,6 +7,7 @@ import PokerLogo from "./PokerLogo";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/calculator", label: "Chip Calculator" },
+  { href: "/feedback", label: "Feedback" },
 ];
 
 export default function NavBar() {
