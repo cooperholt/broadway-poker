@@ -11,6 +11,8 @@ function checkAdmin(password: string): boolean {
 
 export type FeedbackType = "bug" | "recommendation" | "praise" | "other";
 
+const DAILY_FEEDBACK_LIMIT = 10;
+
 export async function submitFeedback(input: {
   message: string;
   name: string | null;
@@ -28,6 +30,21 @@ export async function submitFeedback(input: {
   }
 
   const sb = supabase();
+
+  // Global daily rate limit — counts all submissions (deleted or not) in the
+  // last 24 hours. Simple bound to keep spam manageable.
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { count, error: countErr } = await sb
+    .from("feedback")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", since);
+  if (countErr) return { error: countErr.message };
+  if ((count ?? 0) >= DAILY_FEEDBACK_LIMIT) {
+    return {
+      error: `Daily feedback limit reached (${DAILY_FEEDBACK_LIMIT} in the last 24 hours). Please come back tomorrow.`,
+    };
+  }
+
   const { error } = await sb.from("feedback").insert({
     message,
     name: input.name?.trim() || null,
